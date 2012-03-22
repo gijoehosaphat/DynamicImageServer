@@ -1,0 +1,65 @@
+/**
+ * Adds tasks that can be used to generate IDE project files.
+ * gradle ideaModule creates an IntelliJ IDEA module file, etc. See: http://gradle.org/docs/current/userguide/userguide_single.html#idea_plugin
+ */ 
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+
+/**
+ * Defines our default tasks in the order we want them executed...
+ * By executing > gradle
+ */
+defaultTasks 'clean', 'distribution'
+
+/**
+ * Cleans our build directory (deletes it).
+ */
+task clean(type: Delete) {
+    // Deletes the build directory...
+    delete 'build'
+
+    //This runs during the execution phase.
+    doLast {
+        println "Clean 'build' directory..."
+    }
+}
+
+/**
+ * Generates our distribution file in this pattern:
+ * project-revision.tar.gz
+ */
+task distribution(type: Tar) {
+    // Project starting directory
+    from './'
+
+    // List your files and directories you want to be excluded...
+    excludes = ['build*', '.git*', '*.iml', '.DS_Store']
+    includeEmptyDirs = true
+
+    // This is the base name for the file that will be output.
+    baseName = project.name
+
+    // Dynamically pull our current revision HASH by executing a GIT command.
+    version = new ByteArrayOutputStream().withStream { os ->
+        exec {
+            executable = 'git'
+            args = ['rev-parse', 'HEAD']
+            standardOutput = os
+        }
+        os.toString().trim()
+    }
+
+    // Where the distribution file will be output to...
+    destinationDir = new File('build/distributions')
+
+    // Compression type. BZIP2, GZIP, NONE.
+    compression = Compression.GZIP
+
+    // Filename extension
+    extension = 'tar.gz'
+
+    //This runs during the execution phase.
+    doLast {
+        println "Packaging project distribution..."
+    }
+}
