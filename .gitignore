@@ -1,3 +1,5 @@
 *.iml
 build
 .gradle
+node_modules
+public/images/**/*
